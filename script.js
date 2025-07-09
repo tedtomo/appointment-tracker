@@ -256,9 +256,10 @@ function parseAppointmentDate(dateStr) {
 }
 
 // Initialize dashboard charts
-function initializeDashboardCharts() {
+function initializeDashboardCharts(data = null) {
+    const chartData = data || interviews;
     // Combined day and time chart
-    const dayTimeData = analyzeDayTimeDistribution();
+    const dayTimeData = analyzeDayTimeDistribution(chartData);
     const dayTimeCtx = document.getElementById('dayTimeChart').getContext('2d');
     
     if (charts.dayTimeChart) charts.dayTimeChart.destroy();
@@ -350,7 +351,8 @@ function analyzeTimeDistribution() {
 }
 
 // Analyze combined day and time distribution
-function analyzeDayTimeDistribution() {
+function analyzeDayTimeDistribution(data = null) {
+    const chartData = data || interviews;
     const days = ['月', '火', '水', '木', '金', '土', '日'];
     const timeSlots = [
         { label: '深夜早朝', range: '0-8時', color: 'rgba(147, 197, 253, 0.8)', borderColor: 'rgba(147, 197, 253, 1)' },
@@ -373,7 +375,7 @@ function analyzeDayTimeDistribution() {
     });
     
     // Count appointments by day and time slot
-    interviews.forEach(interview => {
+    chartData.forEach(interview => {
         const parsed = parseAppointmentDate(interview.appointmentDate);
         if (parsed.dayOfWeek && parsed.hour !== null) {
             if (parsed.hour >= 0 && parsed.hour < 8) {
@@ -419,7 +421,9 @@ function analyzeDayTimeDistribution() {
 }
 
 // Initialize analytics charts
-function initializeAnalyticsCharts() {
+function initializeAnalyticsCharts(data = null) {
+    const chartData = data || interviews;
+    
     // Result distribution with updated categories
     const resultCtx = document.getElementById('resultChart').getContext('2d');
     const today = new Date();
@@ -430,7 +434,7 @@ function initializeAnalyticsCharts() {
     let invalid = 0;
     let pending = 0;
     
-    interviews.forEach(interview => {
+    chartData.forEach(interview => {
         const interviewDateMatch = interview.interviewDate.match(/(\d{4})\.(\d{2})\.(\d{2})/);
         if (interviewDateMatch) {
             const interviewDate = new Date(interviewDateMatch[1], interviewDateMatch[2] - 1, interviewDateMatch[3]);
@@ -485,7 +489,7 @@ function initializeAnalyticsCharts() {
     
     // Age distribution
     const ageCtx = document.getElementById('ageChart').getContext('2d');
-    const ageGroups = analyzeAgeDistribution();
+    const ageGroups = analyzeAgeDistribution(chartData);
     
     if (charts.ageChart) charts.ageChart.destroy();
     charts.ageChart = new Chart(ageCtx, {
@@ -521,8 +525,8 @@ function initializeAnalyticsCharts() {
     // Gender distribution
     const genderCtx = document.getElementById('genderChart').getContext('2d');
     const genderCounts = {
-        '男性': interviews.filter(i => i.gender === '男性').length,
-        '女性': interviews.filter(i => i.gender === '女性').length
+        '男性': chartData.filter(i => i.gender === '男性').length,
+        '女性': chartData.filter(i => i.gender === '女性').length
     };
     
     if (charts.genderChart) charts.genderChart.destroy();
@@ -551,7 +555,8 @@ function initializeAnalyticsCharts() {
 }
 
 // Analyze age distribution
-function analyzeAgeDistribution() {
+function analyzeAgeDistribution(data = null) {
+    const chartData = data || interviews;
     const groups = {
         '16-18': 0,
         '19-21': 0,
@@ -563,7 +568,7 @@ function analyzeAgeDistribution() {
         '35+': 0
     };
     
-    interviews.forEach(interview => {
+    chartData.forEach(interview => {
         const ageMatch = interview.age.match(/(\d+)/);
         if (ageMatch) {
             const age = parseInt(ageMatch[1]);
@@ -765,11 +770,8 @@ function applyAnalyticsFilter() {
     updateDashboard(filteredData);
     
     // Reinitialize charts with filtered data
-    const originalInterviews = interviews;
-    interviews = filteredData;
-    initializeDashboardCharts();
-    initializeAnalyticsCharts();
-    interviews = originalInterviews;
+    initializeDashboardCharts(filteredData);
+    initializeAnalyticsCharts(filteredData);
 }
 
 // Clear analytics filter
