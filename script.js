@@ -83,7 +83,7 @@ async function loadFromGoogleSheets() {
     if (data.values && data.values.length > 1) {
         const headers = data.values[0];
         interviews = data.values.slice(1)
-            .filter(row => row[0] && row[1]) // No.と識別子が存在する行のみ
+            .filter(row => row[0] && row[1] && row[1].trim() !== '') // No.と識別子が存在し、識別子が空でない行のみ
             .map(row => ({
                 no: row[0] || '',
                 identifier: row[1] || '',
