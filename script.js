@@ -44,7 +44,10 @@ function showView(viewName) {
     
     // Initialize charts when analytics view is shown
     if (viewName === 'analytics' && interviews.length > 0) {
-        setTimeout(() => initializeAnalyticsCharts(), 100);
+        setTimeout(() => {
+            initializeDashboardCharts();
+            initializeAnalyticsCharts();
+        }, 100);
     }
 }
 
@@ -53,6 +56,8 @@ function setupEventListeners() {
     document.getElementById('searchInput').addEventListener('input', filterTable);
     document.getElementById('statusFilter').addEventListener('change', filterTable);
     document.getElementById('attendanceFilter').addEventListener('change', filterTable);
+    document.getElementById('startDate').addEventListener('change', filterTable);
+    document.getElementById('endDate').addEventListener('change', filterTable);
 }
 
 // Load data from source
@@ -217,10 +222,16 @@ function updateDashboard() {
     const attended = interviews.filter(i => i.attendance === '○').length;
     const attendanceRate = total > 0 ? Math.round((attended / total) * 100) : 0;
     
-    document.getElementById('totalInterviews').textContent = total;
-    document.getElementById('validInterviews').textContent = valid;
-    document.getElementById('invalidInterviews').textContent = invalid;
-    document.getElementById('attendanceRate').textContent = attendanceRate + '%';
+    // Update both dashboard and analytics stats
+    const elements = ['totalInterviews', 'beforeInterviews', 'validInterviews', 'invalidInterviews', 'pendingInterviews', 'attendanceRate'];
+    const values = [total, beforeInterview, valid, invalid, pending, attendanceRate + '%'];
+    
+    elements.forEach((id, index) => {
+        const el1 = document.getElementById(id);
+        const el2 = document.getElementById(id + '2');
+        if (el1) el1.textContent = values[index];
+        if (el2) el2.textContent = values[index];
+    });
 }
 
 // Parse appointment date to extract day and time
@@ -615,6 +626,8 @@ function filterTable() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     const statusFilter = document.getElementById('statusFilter').value;
     const attendanceFilter = document.getElementById('attendanceFilter').value;
+    const startDateValue = document.getElementById('startDate').value;
+    const endDateValue = document.getElementById('endDate').value;
     
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -646,7 +659,26 @@ function filterTable() {
         
         const matchesAttendance = !attendanceFilter || interview.attendance === attendanceFilter;
         
-        return matchesSearch && matchesStatus && matchesAttendance;
+        // Check date range
+        let matchesDateRange = true;
+        const interviewDateMatch = interview.interviewDate.match(/(\d{4})\.(\d{2})\.(\d{2})/);
+        if (interviewDateMatch) {
+            const interviewDate = new Date(interviewDateMatch[1], interviewDateMatch[2] - 1, interviewDateMatch[3]);
+            
+            if (startDateValue) {
+                const startDate = new Date(startDateValue);
+                startDate.setHours(0, 0, 0, 0);
+                if (interviewDate < startDate) matchesDateRange = false;
+            }
+            
+            if (endDateValue) {
+                const endDate = new Date(endDateValue);
+                endDate.setHours(23, 59, 59, 999);
+                if (interviewDate > endDate) matchesDateRange = false;
+            }
+        }
+        
+        return matchesSearch && matchesStatus && matchesAttendance && matchesDateRange;
     });
     
     renderTable(filtered);
