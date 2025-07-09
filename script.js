@@ -540,6 +540,43 @@ function initializeAnalyticsCharts() {
             }
         }
     });
+    
+    // Monthly trends
+    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+    const monthlyData = analyzeMonthlyTrends();
+    
+    if (charts.monthlyChart) charts.monthlyChart.destroy();
+    charts.monthlyChart = new Chart(monthlyCtx, {
+        type: 'line',
+        data: {
+            labels: monthlyData.labels,
+            datasets: [{
+                label: '面談数',
+                data: monthlyData.data,
+                borderColor: 'rgba(0, 122, 255, 1)',
+                backgroundColor: 'rgba(0, 122, 255, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
 }
 
 // Analyze age distribution
@@ -571,6 +608,34 @@ function analyzeAgeDistribution() {
     });
     
     return groups;
+}
+
+// Analyze monthly trends
+function analyzeMonthlyTrends() {
+    const monthCounts = {};
+    const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+    
+    interviews.forEach(interview => {
+        const dateMatch = interview.interviewDate.match(/(\d{4})\.(\d{2})\.(\d{2})/);
+        if (dateMatch) {
+            const year = dateMatch[1];
+            const month = parseInt(dateMatch[2]);
+            const key = `${year}年${month}月`;
+            monthCounts[key] = (monthCounts[key] || 0) + 1;
+        }
+    });
+    
+    // Sort by year and month
+    const sortedKeys = Object.keys(monthCounts).sort((a, b) => {
+        const [yearA, monthA] = a.match(/(\d+)年(\d+)月/).slice(1).map(Number);
+        const [yearB, monthB] = b.match(/(\d+)年(\d+)月/).slice(1).map(Number);
+        return yearA === yearB ? monthA - monthB : yearA - yearB;
+    });
+    
+    return {
+        labels: sortedKeys,
+        data: sortedKeys.map(key => monthCounts[key])
+    };
 }
 
 // Render table
