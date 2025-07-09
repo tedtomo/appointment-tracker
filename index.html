@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">面談管理システム</div>
+            <div class="nav-menu">
+                <a href="#dashboard" class="nav-link active" data-view="dashboard">ダッシュボード</a>
+                <a href="#interviews" class="nav-link" data-view="interviews">面談一覧</a>
+                <a href="#analytics" class="nav-link" data-view="analytics">分析</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <!-- Dashboard View -->
+        <div id="dashboard" class="view active">
+            <div class="page-header">
+                <h1 class="page-title">ダッシュボード</h1>
+                <p class="page-subtitle">面談活動の概要</p>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="totalInterviews">0</div>
+                        <div class="stat-label">総面談数</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="validInterviews">0</div>
+                        <div class="stat-label">有効</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">❌</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="invalidInterviews">0</div>
+                        <div class="stat-label">無効</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="attendanceRate">0%</div>
+                        <div class="stat-label">出席率</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container-wide">
+                <div class="chart-card">
+                    <h3 class="chart-title">曜日・時間帯別予約数</h3>
+                    <canvas id="dayTimeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interviews View -->
+        <div id="interviews" class="view">
+            <div class="page-header">
+                <h1 class="page-title">面談一覧</h1>
+                <p class="page-subtitle">面談記録の管理と追跡</p>
+            </div>
+            
+            <div class="controls-bar">
+                <div class="search-box">
+                    <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                    <input type="text" id="searchInput" placeholder="面談を検索..." class="search-input">
+                </div>
+                <div class="filter-group">
+                    <select id="statusFilter" class="filter-select">
+                        <option value="">すべての判定結果</option>
+                        <option value="有効">有効</option>
+                        <option value="無効">無効</option>
+                        <option value="面談前">面談前</option>
+                        <option value="保留">保留</option>
+                    </select>
+                    <select id="attendanceFilter" class="filter-select">
+                        <option value="">すべての出席状況</option>
+                        <option value="○">出席</option>
+                        <option value="×">欠席</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>識別子</th>
+                            <th>面談予約日</th>
+                            <th>面談日</th>
+                            <th>面談出席</th>
+                            <th>判定結果</th>
+                            <th>却下理由</th>
+                            <th>判定日</th>
+                            <th>年齢</th>
+                            <th>性別</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr>
+                            <td colspan="10" class="loading">データを読み込み中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Analytics View -->
+        <div id="analytics" class="view">
+            <div class="page-header">
+                <h1 class="page-title">分析</h1>
+                <p class="page-subtitle">詳細な洞察とトレンド</p>
+            </div>
+            
+            <div class="analytics-grid">
+                <div class="analytics-card">
+                    <h3 class="analytics-title">判定結果の分布</h3>
+                    <canvas id="resultChart"></canvas>
+                </div>
+                <div class="analytics-card">
+                    <h3 class="analytics-title">年齢分布</h3>
+                    <canvas id="ageChart"></canvas>
+                </div>
+                <div class="analytics-card">
+                    <h3 class="analytics-title">性別分布</h3>
+                    <canvas id="genderChart"></canvas>
+                </div>
+                <div class="analytics-card">
+                    <h3 class="analytics-title">月別トレンド</h3>
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="update-time">
+        最終更新: <span id="lastUpdated">-</span>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
