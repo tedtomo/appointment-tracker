@@ -256,8 +256,8 @@ function parseAppointmentDate(dateStr) {
 }
 
 // Initialize dashboard charts
-function initializeDashboardCharts(data = null) {
-    const chartData = data || interviews;
+function initializeDashboardCharts(inputData = null) {
+    const chartData = inputData || interviews;
     // Combined day and time chart
     const dayTimeData = analyzeDayTimeDistribution(chartData);
     const dayTimeCtx = document.getElementById('dayTimeChart').getContext('2d');
@@ -351,8 +351,8 @@ function analyzeTimeDistribution() {
 }
 
 // Analyze combined day and time distribution
-function analyzeDayTimeDistribution(data = null) {
-    const chartData = data || interviews;
+function analyzeDayTimeDistribution(inputData = null) {
+    const chartData = inputData || interviews;
     const days = ['月', '火', '水', '木', '金', '土', '日'];
     const timeSlots = [
         { label: '深夜早朝', range: '0-8時', color: 'rgba(147, 197, 253, 0.8)', borderColor: 'rgba(147, 197, 253, 1)' },
@@ -421,8 +421,8 @@ function analyzeDayTimeDistribution(data = null) {
 }
 
 // Initialize analytics charts
-function initializeAnalyticsCharts(data = null) {
-    const chartData = data || interviews;
+function initializeAnalyticsCharts(inputData = null) {
+    const chartData = inputData || interviews;
     
     // Result distribution with updated categories
     const resultCtx = document.getElementById('resultChart').getContext('2d');
@@ -555,8 +555,8 @@ function initializeAnalyticsCharts(data = null) {
 }
 
 // Analyze age distribution
-function analyzeAgeDistribution(data = null) {
-    const chartData = data || interviews;
+function analyzeAgeDistribution(inputData = null) {
+    const chartData = inputData || interviews;
     const groups = {
         '16-18': 0,
         '19-21': 0,
