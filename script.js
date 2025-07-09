@@ -56,12 +56,14 @@ function setupEventListeners() {
     document.getElementById('searchInput').addEventListener('input', filterTable);
     document.getElementById('statusFilter').addEventListener('change', filterTable);
     document.getElementById('attendanceFilter').addEventListener('change', filterTable);
+    document.getElementById('dateTypeFilter').addEventListener('change', filterTable);
     document.getElementById('startDate').addEventListener('change', filterTable);
     document.getElementById('endDate').addEventListener('change', filterTable);
     
     // Analytics filters
     document.getElementById('applyAnalyticsFilter').addEventListener('click', applyAnalyticsFilter);
     document.getElementById('clearAnalyticsFilter').addEventListener('click', clearAnalyticsFilter);
+    document.getElementById('analyticsDateType').addEventListener('change', applyAnalyticsFilter);
 }
 
 // Load data from source
@@ -691,6 +693,7 @@ function filterTable() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     const statusFilter = document.getElementById('statusFilter').value;
     const attendanceFilter = document.getElementById('attendanceFilter').value;
+    const dateTypeFilter = document.getElementById('dateTypeFilter').value;
     const startDateValue = document.getElementById('startDate').value;
     const endDateValue = document.getElementById('endDate').value;
     
@@ -724,22 +727,39 @@ function filterTable() {
         
         const matchesAttendance = !attendanceFilter || interview.attendance === attendanceFilter;
         
-        // Check date range
+        // Check date range based on selected date type
         let matchesDateRange = true;
-        const interviewDateMatch = interview.interviewDate.match(/(\d{4})\.(\d{2})\.(\d{2})/);
-        if (interviewDateMatch) {
-            const interviewDate = new Date(interviewDateMatch[1], interviewDateMatch[2] - 1, interviewDateMatch[3]);
+        if (startDateValue || endDateValue) {
+            let targetDate;
             
-            if (startDateValue) {
-                const startDate = new Date(startDateValue);
-                startDate.setHours(0, 0, 0, 0);
-                if (interviewDate < startDate) matchesDateRange = false;
+            if (dateTypeFilter === 'appointment') {
+                // Parse appointment date
+                const appointmentMatch = interview.appointmentDate.match(/(\d{4})\.(\d{2})\.(\d{2})/);
+                if (appointmentMatch) {
+                    targetDate = new Date(appointmentMatch[1], appointmentMatch[2] - 1, appointmentMatch[3]);
+                }
+            } else {
+                // Parse interview date (default)
+                const interviewMatch = interview.interviewDate.match(/(\d{4})\.(\d{2})\.(\d{2})/);
+                if (interviewMatch) {
+                    targetDate = new Date(interviewMatch[1], interviewMatch[2] - 1, interviewMatch[3]);
+                }
             }
             
-            if (endDateValue) {
-                const endDate = new Date(endDateValue);
-                endDate.setHours(23, 59, 59, 999);
-                if (interviewDate > endDate) matchesDateRange = false;
+            if (targetDate) {
+                targetDate.setHours(0, 0, 0, 0);
+                
+                if (startDateValue) {
+                    const startDate = new Date(startDateValue);
+                    startDate.setHours(0, 0, 0, 0);
+                    if (targetDate < startDate) matchesDateRange = false;
+                }
+                
+                if (endDateValue) {
+                    const endDate = new Date(endDateValue);
+                    endDate.setHours(23, 59, 59, 999);
+                    if (targetDate > endDate) matchesDateRange = false;
+                }
             }
         }
         
@@ -766,24 +786,38 @@ function showError(message) {
 function applyAnalyticsFilter() {
     const startDate = document.getElementById('analyticsStartDate').value;
     const endDate = document.getElementById('analyticsEndDate').value;
+    const dateType = document.getElementById('analyticsDateType').value;
     
     let filteredData = interviews;
     
     if (startDate || endDate) {
         filteredData = interviews.filter(interview => {
-            const dateMatch = interview.interviewDate.match(/(\d{4})\.(\d{2})\.(\d{2})/);
-            if (!dateMatch) return true;
+            let targetDate;
             
-            const interviewDate = new Date(dateMatch[1], dateMatch[2] - 1, dateMatch[3]);
+            if (dateType === 'appointment') {
+                // Parse appointment date
+                const appointmentMatch = interview.appointmentDate.match(/(\d{4})\.(\d{2})\.(\d{2})/);
+                if (appointmentMatch) {
+                    targetDate = new Date(appointmentMatch[1], appointmentMatch[2] - 1, appointmentMatch[3]);
+                }
+            } else {
+                // Parse interview date (default)
+                const interviewMatch = interview.interviewDate.match(/(\d{4})\.(\d{2})\.(\d{2})/);
+                if (interviewMatch) {
+                    targetDate = new Date(interviewMatch[1], interviewMatch[2] - 1, interviewMatch[3]);
+                }
+            }
+            
+            if (!targetDate) return true;
             
             if (startDate) {
                 const start = new Date(startDate);
-                if (interviewDate < start) return false;
+                if (targetDate < start) return false;
             }
             
             if (endDate) {
                 const end = new Date(endDate);
-                if (interviewDate > end) return false;
+                if (targetDate > end) return false;
             }
             
             return true;

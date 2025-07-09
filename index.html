@@ -37,6 +37,10 @@
                     <input type="text" id="searchInput" placeholder="面談を検索..." class="search-input">
                 </div>
                 <div class="filter-group">
+                    <select id="dateTypeFilter" class="filter-select">
+                        <option value="interview">面談日</option>
+                        <option value="appointment">面談予約日</option>
+                    </select>
                     <input type="date" id="startDate" class="date-input" placeholder="開始日">
                     <input type="date" id="endDate" class="date-input" placeholder="終了日">
                     <select id="statusFilter" class="filter-select">
@@ -86,6 +90,13 @@
             </div>
             
             <div class="analytics-filters">
+                <div class="filter-group">
+                    <label for="analyticsDateType">基準日</label>
+                    <select id="analyticsDateType" class="filter-select">
+                        <option value="interview">面談日</option>
+                        <option value="appointment">面談予約日</option>
+                    </select>
+                </div>
                 <div class="filter-group">
                     <label for="analyticsStartDate">開始日</label>
                     <input type="date" id="analyticsStartDate" class="date-input">
