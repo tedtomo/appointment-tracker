@@ -58,6 +58,10 @@ function setupEventListeners() {
     document.getElementById('attendanceFilter').addEventListener('change', filterTable);
     document.getElementById('startDate').addEventListener('change', filterTable);
     document.getElementById('endDate').addEventListener('change', filterTable);
+    
+    // Analytics filters
+    document.getElementById('applyAnalyticsFilter').addEventListener('click', applyAnalyticsFilter);
+    document.getElementById('clearAnalyticsFilter').addEventListener('click', clearAnalyticsFilter);
 }
 
 // Load data from source
@@ -71,7 +75,10 @@ async function loadData() {
         renderTable();
         updateLastUpdated();
         updateDashboard();
-        initializeDashboardCharts();
+        if (document.getElementById('analytics').classList.contains('active')) {
+            initializeDashboardCharts();
+            initializeAnalyticsCharts();
+        }
     } catch (error) {
         console.error('Error loading data:', error);
         showError('データの読み込みに失敗しました。');
@@ -185,7 +192,8 @@ async function loadFromCSV() {
 }
 
 // Update dashboard statistics
-function updateDashboard() {
+function updateDashboard(filteredData = null) {
+    const data = filteredData || interviews;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -194,7 +202,7 @@ function updateDashboard() {
     let invalid = 0;
     let pending = 0;
     
-    interviews.forEach(interview => {
+    data.forEach(interview => {
         // Parse interview date
         const interviewDateMatch = interview.interviewDate.match(/(\d{4})\.(\d{2})\.(\d{2})/);
         if (interviewDateMatch) {
@@ -218,8 +226,8 @@ function updateDashboard() {
         }
     });
     
-    const total = interviews.length;
-    const attended = interviews.filter(i => i.attendance === '○').length;
+    const total = data.length;
+    const attended = data.filter(i => i.attendance === '○').length;
     const attendanceRate = total > 0 ? Math.round((attended / total) * 100) : 0;
     
     // Update both dashboard and analytics stats
@@ -540,43 +548,6 @@ function initializeAnalyticsCharts() {
             }
         }
     });
-    
-    // Monthly trends
-    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
-    const monthlyData = analyzeMonthlyTrends();
-    
-    if (charts.monthlyChart) charts.monthlyChart.destroy();
-    charts.monthlyChart = new Chart(monthlyCtx, {
-        type: 'line',
-        data: {
-            labels: monthlyData.labels,
-            datasets: [{
-                label: '面談数',
-                data: monthlyData.data,
-                borderColor: 'rgba(0, 122, 255, 1)',
-                backgroundColor: 'rgba(0, 122, 255, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
-                    }
-                }
-            }
-        }
-    });
 }
 
 // Analyze age distribution
@@ -760,4 +731,54 @@ function updateLastUpdated() {
 function showError(message) {
     const tbody = document.getElementById('tableBody');
     tbody.innerHTML = `<tr><td colspan="10" class="loading">${message}</td></tr>`;
+}
+
+// Apply analytics filter
+function applyAnalyticsFilter() {
+    const startDate = document.getElementById('analyticsStartDate').value;
+    const endDate = document.getElementById('analyticsEndDate').value;
+    
+    let filteredData = interviews;
+    
+    if (startDate || endDate) {
+        filteredData = interviews.filter(interview => {
+            const dateMatch = interview.interviewDate.match(/(\d{4})\.(\d{2})\.(\d{2})/);
+            if (!dateMatch) return true;
+            
+            const interviewDate = new Date(dateMatch[1], dateMatch[2] - 1, dateMatch[3]);
+            
+            if (startDate) {
+                const start = new Date(startDate);
+                if (interviewDate < start) return false;
+            }
+            
+            if (endDate) {
+                const end = new Date(endDate);
+                if (interviewDate > end) return false;
+            }
+            
+            return true;
+        });
+    }
+    
+    // Update statistics with filtered data
+    updateDashboard(filteredData);
+    
+    // Reinitialize charts with filtered data
+    const originalInterviews = interviews;
+    interviews = filteredData;
+    initializeDashboardCharts();
+    initializeAnalyticsCharts();
+    interviews = originalInterviews;
+}
+
+// Clear analytics filter
+function clearAnalyticsFilter() {
+    document.getElementById('analyticsStartDate').value = '';
+    document.getElementById('analyticsEndDate').value = '';
+    
+    // Reset to all data
+    updateDashboard();
+    initializeDashboardCharts();
+    initializeAnalyticsCharts();
 }
