@@ -82,18 +82,20 @@ async function loadFromGoogleSheets() {
     
     if (data.values && data.values.length > 1) {
         const headers = data.values[0];
-        interviews = data.values.slice(1).map(row => ({
-            no: row[0] || '',
-            identifier: row[1] || '',
-            appointmentDate: row[2] || '',
-            interviewDate: row[3] || '',
-            attendance: row[4] || '',
-            result: row[5] || '',
-            rejectReason: row[6] || '',
-            judgmentDate: row[7] || '',
-            age: row[8] || '',
-            gender: row[9] || ''
-        }));
+        interviews = data.values.slice(1)
+            .filter(row => row[0] && row[1]) // No.と識別子が存在する行のみ
+            .map(row => ({
+                no: row[0] || '',
+                identifier: row[1] || '',
+                appointmentDate: row[2] || '',
+                interviewDate: row[3] || '',
+                attendance: row[4] || '',
+                result: row[5] || '',
+                rejectReason: row[6] || '',
+                judgmentDate: row[7] || '',
+                age: row[8] || '',
+                gender: row[9] || ''
+            }));
     }
 }
 
