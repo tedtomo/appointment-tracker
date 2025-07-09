@@ -3,7 +3,7 @@ const CONFIG = {
     // Google Sheets API configuration
     spreadsheetId: '1rsUWkrkWiDbrCPXwmbFQ6BcQEvXtLbdBs-UWf2EPYzw',
     apiKey: 'AIzaSyBnHa_GmI4y36exdd5G1TMbTFJTG6J3TyE',
-    range: 'シート1!A:J',
+    range: '求職者一覧!A:J',
     
     // Alternative: Use CSV file
     csvUrl: 'data.csv',
