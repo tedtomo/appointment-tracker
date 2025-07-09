@@ -67,11 +67,16 @@ function setupEventListeners() {
 // Load data from source
 async function loadData() {
     try {
+        console.log('Starting data load...');
+        
         if (CONFIG.useGoogleSheets) {
             await loadFromGoogleSheets();
         } else {
             await loadFromCSV();
         }
+        
+        console.log('Data loaded:', interviews.length, 'records');
+        
         renderTable();
         updateLastUpdated();
         updateDashboard();
@@ -81,7 +86,7 @@ async function loadData() {
         }
     } catch (error) {
         console.error('Error loading data:', error);
-        showError('データの読み込みに失敗しました。');
+        showError('データの読み込みに失敗しました。詳細: ' + error.message);
     }
 }
 
@@ -89,25 +94,44 @@ async function loadData() {
 async function loadFromGoogleSheets() {
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.spreadsheetId}/values/${CONFIG.range}?key=${CONFIG.apiKey}`;
     
-    const response = await fetch(url);
-    const data = await response.json();
-    
-    if (data.values && data.values.length > 1) {
-        const headers = data.values[0];
-        interviews = data.values.slice(1)
-            .filter(row => row[0] && row[1] && row[1].trim() !== '') // No.と識別子が存在し、識別子が空でない行のみ
-            .map(row => ({
-                no: row[0] || '',
-                identifier: row[1] || '',
-                appointmentDate: row[2] || '',
-                interviewDate: row[3] || '',
-                attendance: row[4] || '',
-                result: row[5] || '',
-                rejectReason: row[6] || '',
-                judgmentDate: row[7] || '',
-                age: row[8] || '',
-                gender: row[9] || ''
-            }));
+    try {
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            console.error('Google Sheets API error:', data.error);
+            throw new Error(`API Error: ${data.error.message}`);
+        }
+        
+        if (data.values && data.values.length > 1) {
+            const headers = data.values[0];
+            interviews = data.values.slice(1)
+                .filter(row => row[0] && row[1] && row[1].trim() !== '') // No.と識別子が存在し、識別子が空でない行のみ
+                .map(row => ({
+                    no: row[0] || '',
+                    identifier: row[1] || '',
+                    appointmentDate: row[2] || '',
+                    interviewDate: row[3] || '',
+                    attendance: row[4] || '',
+                    result: row[5] || '',
+                    rejectReason: row[6] || '',
+                    judgmentDate: row[7] || '',
+                    age: row[8] || '',
+                    gender: row[9] || ''
+                }));
+        } else {
+            console.warn('No data found in spreadsheet');
+            interviews = [];
+        }
+    } catch (error) {
+        console.error('Failed to load from Google Sheets:', error);
+        // Fallback to CSV
+        await loadFromCSV();
     }
 }
 
